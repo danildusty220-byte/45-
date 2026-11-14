@@ -1,0 +1,6 @@
+{
+  "name": "Гардероб",
+  "description": "Свайп-каталог брендовой одежды Balenciaga, Off-White, Rick Owens, Prada и других люксовых марок.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
