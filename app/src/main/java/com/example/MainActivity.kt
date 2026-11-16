@@ -1,9 +1,11 @@
 package com.example
 
 import android.content.Intent
+import android.graphics.Color as AndroidColor
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
@@ -29,11 +31,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.DesignerCatalog
 import com.example.data.ItemShareHelper
 import com.example.domain.model.DesignerItem
+import com.example.domain.model.GoalTargetType
 import com.example.ui.DesignerFeedViewModel
+import com.example.ui.ResolvedOutfit
 import com.example.ui.components.AppDestination
+import com.example.ui.components.CreateGoalSheet
 import com.example.ui.components.DesignerItemDetailSheet
 import com.example.ui.components.FloatingDockBar
 import com.example.ui.screens.FeedScreen
+import com.example.ui.screens.GoalsScreen
+import com.example.ui.screens.OutfitsScreen
 import com.example.ui.screens.ProfileScreen
 import com.example.ui.theme.GarderobTheme
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,7 +54,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         handleDeepLink(intent)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT),
+        )
         setContent {
             GarderobTheme {
                 GarderobApp(
@@ -84,6 +94,10 @@ fun GarderobApp(
 
     var currentDestination by remember { mutableStateOf(AppDestination.FEED) }
     var inspectingItemId by remember { mutableStateOf<String?>(null) }
+    var showCreateGoalSheet by remember { mutableStateOf(false) }
+    var goalDraftMode by remember { mutableStateOf(GoalTargetType.ITEM) }
+    var goalDraftItem by remember { mutableStateOf<DesignerItem?>(null) }
+    var goalDraftOutfit by remember { mutableStateOf<ResolvedOutfit?>(null) }
 
     LaunchedEffect(sharedItemId, uiState.allItems) {
         val targetId = sharedItemId ?: return@LaunchedEffect
@@ -125,12 +139,54 @@ fun GarderobApp(
                         onKeywordChange = viewModel::updateKeyword,
                         onSelectBrand = viewModel::selectBrand,
                         onSelectCategory = viewModel::selectCategory,
-                        onSelectWeather = viewModel::selectWeather,
+                        onUpdateFeedColumns = viewModel::updateFeedColumns,
+                        onShuffleFeed = viewModel::shuffleFeed,
                         onResetFilters = viewModel::resetFilters,
                         onToggleLike = viewModel::toggleLike,
                         onItemClick = { item -> inspectingItemId = item.id },
                         onShareItem = ::shareItem,
                         onOpenAvitoUrl = ::openExternalUrl,
+                    )
+                }
+
+                AppDestination.OUTFITS -> {
+                    OutfitsScreen(
+                        uiState = uiState,
+                        onBackToFeed = { currentDestination = AppDestination.FEED },
+                        onCreateOutfit = { name, itemIds -> viewModel.createOutfit(name, itemIds) },
+                        onUpdateOutfit = { outfitId, name, itemIds ->
+                            viewModel.updateOutfit(outfitId, name, itemIds)
+                        },
+                        onDeleteOutfit = viewModel::deleteOutfit,
+                        onToggleFavoriteOutfit = viewModel::toggleFavoriteOutfit,
+                        onCreateGoalForOutfit = { resolved ->
+                            goalDraftMode = GoalTargetType.OUTFIT
+                            goalDraftItem = null
+                            goalDraftOutfit = resolved
+                            showCreateGoalSheet = true
+                        },
+                        onItemClick = { item -> inspectingItemId = item.id },
+                    )
+                }
+
+                AppDestination.GOALS -> {
+                    GoalsScreen(
+                        uiState = uiState,
+                        onBackToFeed = { currentDestination = AppDestination.FEED },
+                        onOpenCreateGoal = { mode ->
+                            goalDraftMode = mode
+                            goalDraftItem = null
+                            goalDraftOutfit = null
+                            showCreateGoalSheet = true
+                        },
+                        onAddDeposit = { goalId, amountRub ->
+                            viewModel.addGoalDeposit(goalId, amountRub)
+                        },
+                        onUpdateGoalAmounts = { goalId, targetRub, savedRub ->
+                            viewModel.updateGoalAmounts(goalId, targetRub, savedRub)
+                        },
+                        onDeleteGoal = viewModel::deleteGoal,
+                        onItemClick = { item -> inspectingItemId = item.id },
                     )
                 }
 
@@ -146,6 +202,8 @@ fun GarderobApp(
                         onItemClick = { item -> inspectingItemId = item.id },
                         onRemoveLike = viewModel::removeLike,
                         onClearAllLikes = viewModel::clearAllLikes,
+                        onOpenOutfits = { currentDestination = AppDestination.OUTFITS },
+                        onClearFavoriteOutfit = viewModel::clearFavoriteOutfit,
                     )
                 }
             }
@@ -153,6 +211,8 @@ fun GarderobApp(
             FloatingDockBar(
                 currentDestination = currentDestination,
                 likedCount = uiState.likedItems.size,
+                outfitsCount = uiState.outfits.size,
+                goalsCount = uiState.activeGoalsCount,
                 onSelectDestination = { destination -> currentDestination = destination },
                 modifier = Modifier.align(Alignment.BottomCenter),
             )
@@ -172,6 +232,35 @@ fun GarderobApp(
             onSelectVariant = { variant -> inspectingItemId = variant.id },
             onOpenAvito = ::openExternalUrl,
             onShareItem = ::shareItem,
+            onCreateGoal = { item ->
+                inspectingItemId = null
+                goalDraftMode = GoalTargetType.ITEM
+                goalDraftItem = item
+                goalDraftOutfit = null
+                showCreateGoalSheet = true
+            },
+        )
+    }
+
+    if (showCreateGoalSheet) {
+        CreateGoalSheet(
+            allItems = uiState.allItems,
+            outfits = uiState.outfits,
+            initialItem = goalDraftItem,
+            initialOutfit = goalDraftOutfit,
+            initialMode = goalDraftMode,
+            onDismiss = { showCreateGoalSheet = false },
+            onGoToOutfits = { currentDestination = AppDestination.OUTFITS },
+            onCreateItemGoal = { itemId, targetAmountRub ->
+                if (viewModel.createItemGoal(itemId, targetAmountRub) != null) {
+                    currentDestination = AppDestination.GOALS
+                }
+            },
+            onCreateOutfitGoal = { outfitId, targetAmountRub ->
+                if (viewModel.createOutfitGoal(outfitId, targetAmountRub) != null) {
+                    currentDestination = AppDestination.GOALS
+                }
+            },
         )
     }
 }

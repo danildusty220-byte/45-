@@ -27,11 +27,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -71,9 +73,10 @@ fun DesignerItemDetailSheet(
     onSelectVariant: (DesignerItem) -> Unit,
     onOpenAvito: (String) -> Unit,
     onShareItem: (DesignerItem) -> Unit,
+    onCreateGoal: (DesignerItem) -> Unit = {},
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val avitoTargetUrl = AvitoLinkHelper.buildAvitoSearchUrl(
+    val avitoTargetUrl = item.avitoUrl ?: AvitoLinkHelper.buildAvitoSearchUrl(
         "${item.brand.displayName} ${item.title}",
     )
 
@@ -98,11 +101,13 @@ fun DesignerItemDetailSheet(
                 DesignerGarmentImage(
                     item = displayItem,
                     contentDescription = "${displayItem.brand.displayName} ${displayItem.title}",
-                    contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.Fit,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(320.dp)
-                        .clip(RoundedCornerShape(22.dp)),
+                        .clip(RoundedCornerShape(22.dp))
+                        .background(Color.White)
+                        .padding(10.dp),
                 )
             }
 
@@ -327,33 +332,57 @@ fun DesignerItemDetailSheet(
                 }
             }
 
-            Button(
-                onClick = onToggleLike,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-                    .testTag("detail_like_button"),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isLiked) {
-                        MaterialTheme.colorScheme.secondary
-                    } else {
-                        MaterialTheme.colorScheme.primary
-                    },
-                ),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Icon(
-                    imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = stringResource(
-                        if (isLiked) R.string.detail_like_added else R.string.detail_like_add,
+                FilledTonalButton(
+                    onClick = { onCreateGoal(item) },
+                    modifier = Modifier
+                        .height(52.dp)
+                        .testTag("detail_goal_button"),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Savings,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.detail_set_goal),
+                        maxLines = 1,
+                    )
+                }
+
+                Button(
+                    onClick = onToggleLike,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp)
+                        .testTag("detail_like_button"),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isLiked) {
+                            MaterialTheme.colorScheme.secondary
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        },
                     ),
-                    maxLines = 1,
-                )
+                ) {
+                    Icon(
+                        imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(
+                            if (isLiked) R.string.detail_like_added else R.string.detail_like_add,
+                        ),
+                        maxLines = 1,
+                    )
+                }
             }
         }
     }
@@ -361,7 +390,7 @@ fun DesignerItemDetailSheet(
 
 @Composable
 private fun weatherLabelShort(condition: WeatherCondition): String = when (condition) {
-    WeatherCondition.ALL -> stringResource(R.string.filter_all_weather)
+    WeatherCondition.ALL -> stringResource(R.string.weather_all)
     WeatherCondition.HOT -> stringResource(R.string.chip_weather_hot)
     WeatherCondition.MILD -> stringResource(R.string.chip_weather_mild)
     WeatherCondition.COLD -> stringResource(R.string.chip_weather_cold)
@@ -468,46 +497,6 @@ fun CategoryPickerSheet(
                         onDismiss()
                     },
                     modifier = Modifier.testTag("picker_cat_${category.name.lowercase()}"),
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun WeatherPickerSheet(
-    selectedWeather: WeatherCondition,
-    onSelectWeather: (WeatherCondition) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(bottom = 16.dp),
-        ) {
-            Text(
-                text = stringResource(R.string.filter_tile_weather_title),
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-            )
-
-            WeatherCondition.entries.forEach { condition ->
-                PickerRow(
-                    label = stringResource(condition.labelRes),
-                    selected = selectedWeather == condition,
-                    onClick = {
-                        onSelectWeather(condition)
-                        onDismiss()
-                    },
-                    modifier = Modifier.testTag("picker_weather_${condition.name.lowercase()}"),
                 )
             }
         }

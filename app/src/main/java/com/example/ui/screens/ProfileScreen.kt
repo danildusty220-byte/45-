@@ -2,8 +2,12 @@ package com.example.ui.screens
 
 import android.net.Uri
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -61,11 +65,17 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.R
-import com.example.data.DesignerCatalog
 import com.example.data.UserProfile
 import com.example.domain.model.DesignerItem
+import androidx.compose.material.icons.filled.Checkroom
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.OutlinedButton
 import com.example.ui.DesignerFeedUiState
+import com.example.ui.ResolvedOutfit
+import com.example.ui.components.CompatibilityScoreBanner
 import com.example.ui.components.DesignerGarmentImage
+import com.example.ui.components.OutfitSilhouetteCollage
 import com.example.ui.components.ProfileAvatarCircle
 import com.example.ui.components.ProfileCustomizeSheet
 import com.example.ui.theme.ProfilePalette
@@ -91,6 +101,8 @@ fun ProfileScreen(
     onItemClick: (DesignerItem) -> Unit,
     onRemoveLike: (String) -> Unit,
     onClearAllLikes: () -> Unit,
+    onOpenOutfits: () -> Unit,
+    onClearFavoriteOutfit: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     BackHandler(onBack = onBackToFeed)
@@ -98,6 +110,22 @@ fun ProfileScreen(
     var showCustomizeSheet by remember { mutableStateOf(false) }
     val profile = uiState.userProfile
     val topTint = ProfilePalette.surfaceTopTint(profile.gradientStartArgb)
+
+    val avatarPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+    ) { uri ->
+        if (uri != null) {
+            onPickAvatarUri(uri)
+        }
+    }
+
+    val coverPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+    ) { uri ->
+        if (uri != null) {
+            onPickCoverUri(uri)
+        }
+    }
 
     val screenModifier = if (profile.useGradientBackground) {
         modifier
@@ -138,7 +166,26 @@ fun ProfileScreen(
                     profile = profile,
                     likedCount = uiState.likedItems.size,
                     catalogCount = uiState.allItems.size,
+                    onEditCover = {
+                        coverPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                        )
+                    },
+                    onEditAvatar = {
+                        avatarPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                        )
+                    },
                     onOpenCustomize = { showCustomizeSheet = true },
+                )
+            }
+
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                FavoriteOutfitShowcaseSection(
+                    favoriteOutfit = uiState.favoriteOutfit,
+                    onOpenOutfits = onOpenOutfits,
+                    onClearFavoriteOutfit = onClearFavoriteOutfit,
+                    onItemClick = onItemClick,
                 )
             }
 
@@ -211,13 +258,16 @@ fun ProfileScreen(
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .aspectRatio(0.85f),
+                                    .aspectRatio(0.85f)
+                                    .background(Color.White),
                             ) {
                                 DesignerGarmentImage(
                                     item = item,
                                     contentDescription = item.title,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Fit,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(6.dp),
                                 )
                                 IconButton(
                                     onClick = { onRemoveLike(item.id) },
@@ -285,6 +335,8 @@ private fun DiscordProfileCard(
     profile: UserProfile,
     likedCount: Int,
     catalogCount: Int,
+    onEditCover: () -> Unit,
+    onEditAvatar: () -> Unit,
     onOpenCustomize: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -322,12 +374,13 @@ private fun DiscordProfileCard(
                     },
                 ),
         ) {
-            // Custom Cover Photo or Gradient Banner + Edit Profile Pill
+            // Custom Cover Photo or Gradient Banner + Pencil over Cover + Customize Pill
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(134.dp)
-                    .background(Brush.linearGradient(bannerColors)),
+                    .background(Brush.linearGradient(bannerColors))
+                    .clickable(onClick = onEditCover),
             ) {
                 if (hasCoverFile) {
                     AsyncImage(
@@ -339,6 +392,31 @@ private fun DiscordProfileCard(
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),
                     )
+                }
+
+                // Pencil icon directly over the cover to change cover photo
+                IconButton(
+                    onClick = onEditCover,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(6.dp)
+                        .minimumInteractiveComponentSize()
+                        .testTag("profile_cover_pencil_button"),
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = Color.Black.copy(alpha = 0.58f),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = stringResource(R.string.profile_edit_cover_cd),
+                            tint = Color.White,
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .size(16.dp),
+                        )
+                    }
                 }
 
                 Surface(
@@ -372,7 +450,7 @@ private fun DiscordProfileCard(
                 }
             }
 
-            // Overlapping Avatar + Name/Bio + Stats
+            // Overlapping Avatar (with Pencil Badge) + Name/Bio + Stats
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -382,9 +460,7 @@ private fun DiscordProfileCard(
                 Box(
                     modifier = Modifier
                         .offset(y = (-42).dp)
-                        .clip(CircleShape)
-                        .clickable(onClick = onOpenCustomize)
-                        .testTag("profile_avatar_tap"),
+                        .size(86.dp),
                 ) {
                     ProfileAvatarCircle(
                         avatarFilePath = profile.avatarFilePath,
@@ -393,7 +469,38 @@ private fun DiscordProfileCard(
                         ringColor = ringColor,
                         accentColor = Color(profile.gradientStartArgb),
                         size = 86.dp,
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .clickable(onClick = onEditAvatar)
+                            .testTag("profile_avatar_tap"),
                     )
+
+                    // Pencil badge overlaid directly on the avatar
+                    IconButton(
+                        onClick = onEditAvatar,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .offset(x = 6.dp, y = 6.dp)
+                            .minimumInteractiveComponentSize()
+                            .testTag("profile_avatar_pencil_button"),
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .size(30.dp)
+                                .border(2.dp, ringColor, CircleShape),
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Filled.Edit,
+                                    contentDescription = stringResource(R.string.profile_edit_avatar_cd),
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(15.dp),
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Column(
@@ -486,3 +593,163 @@ private fun StatMiniCard(
         }
     }
 }
+
+@Composable
+private fun FavoriteOutfitShowcaseSection(
+    favoriteOutfit: ResolvedOutfit?,
+    onOpenOutfits: () -> Unit,
+    onClearFavoriteOutfit: () -> Unit,
+    onItemClick: (DesignerItem) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.profile_favorite_outfit_title),
+                style = MaterialTheme.typography.titleLarge,
+            )
+            if (favoriteOutfit != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TextButton(
+                        onClick = onOpenOutfits,
+                        modifier = Modifier.testTag("profile_change_favorite_outfit"),
+                    ) {
+                        Text(stringResource(R.string.profile_favorite_outfit_change))
+                    }
+                    TextButton(
+                        onClick = onClearFavoriteOutfit,
+                        modifier = Modifier.testTag("profile_remove_favorite_outfit"),
+                    ) {
+                        Text(stringResource(R.string.profile_favorite_outfit_remove))
+                    }
+                }
+            }
+        }
+
+        if (favoriteOutfit == null) {
+            Card(
+                shape = RoundedCornerShape(22.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("profile_favorite_outfit_empty"),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 22.dp, horizontal = 20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Checkroom,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(32.dp),
+                    )
+                    Text(
+                        text = stringResource(R.string.profile_favorite_outfit_empty),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                    FilledTonalButton(
+                        onClick = onOpenOutfits,
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier
+                            .height(48.dp)
+                            .testTag("profile_pick_favorite_outfit_button"),
+                    ) {
+                        Text(stringResource(R.string.profile_favorite_outfit_pick))
+                    }
+                }
+            }
+        } else {
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("profile_favorite_outfit_card"),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = favoriteOutfit.name,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = stringResource(
+                                    R.string.outfit_items_count,
+                                    favoriteOutfit.items.size,
+                                ),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Star,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(14.dp),
+                                )
+                                Text(
+                                    text = stringResource(R.string.profile_favorite_outfit_badge),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                )
+                            }
+                        }
+                    }
+
+                    OutfitSilhouetteCollage(
+                        items = favoriteOutfit.items,
+                        onItemClick = onItemClick,
+                        compact = true,
+                    )
+
+                    CompatibilityScoreBanner(
+                        compatibility = favoriteOutfit.compatibility,
+                        compact = true,
+                    )
+                }
+            }
+        }
+    }
+}
+

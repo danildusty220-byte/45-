@@ -1,7 +1,6 @@
 package com.example.ui.theme
 
 import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
@@ -63,13 +62,13 @@ private val AtelierDarkColorScheme = darkColorScheme(
     onSurface = SoftLinenText,
     surfaceVariant = DarkTaupeSurfaceVariant,
     onSurfaceVariant = DarkUmberMuted,
-    surfaceContainerLowest = Color(0xFF110E0D),
-    surfaceContainerLow = Color(0xFF1B1714),
+    surfaceContainerLowest = Color(0xFF050507),
+    surfaceContainerLow = Color(0xFF0D0D10),
     surfaceContainer = DarkWalnutSurface,
-    surfaceContainerHigh = Color(0xFF2B2420),
+    surfaceContainerHigh = Color(0xFF1A1A20),
     surfaceContainerHighest = DarkTaupeSurfaceVariant,
     outline = DarkStoneOutline,
-    outlineVariant = Color(0xFF3C332D),
+    outlineVariant = Color(0xFF272730),
 )
 
 val AtelierShapes = Shapes(
@@ -82,7 +81,7 @@ val AtelierShapes = Shapes(
 
 @Composable
 fun GarderobTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = true,
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {

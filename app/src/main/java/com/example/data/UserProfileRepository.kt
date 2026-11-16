@@ -5,11 +5,13 @@ import android.net.Uri
 import com.example.ui.theme.ProfileGradientPreset
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.io.File
+import kotlin.random.Random
 
 data class UserProfile(
-    val displayName: String = "Данил",
+    val displayName: String = UserProfileRepository.randomDefaultDisplayName(),
     val username: String = "@garderob",
     val bio: String = "Архив и редкий стритвир",
     val avatarFilePath: String? = null,
@@ -26,13 +28,20 @@ class UserProfileRepository(context: Context) {
     private val prefs = appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     private val _profile = MutableStateFlow(loadInitialProfile())
-    val profile: Flow<UserProfile> = _profile.asStateFlow()
+    val profile: StateFlow<UserProfile> = _profile.asStateFlow()
+
+    private val _feedColumns = MutableStateFlow(loadInitialFeedColumns())
+    val feedColumns: StateFlow<Int> = _feedColumns.asStateFlow()
 
     private fun loadInitialProfile(): UserProfile {
+        val savedName = prefs.getString(KEY_DISPLAY_NAME, null)?.takeIf { it.isNotBlank() }
+        val resolvedName = savedName ?: randomDefaultDisplayName().also { generated ->
+            prefs.edit().putString(KEY_DISPLAY_NAME, generated).apply()
+        }
         val savedAvatar = prefs.getString(KEY_AVATAR_PATH, null)?.takeIf { File(it).exists() }
         val savedCover = prefs.getString(KEY_COVER_PATH, null)?.takeIf { File(it).exists() }
         return UserProfile(
-            displayName = prefs.getString(KEY_DISPLAY_NAME, "Данил").orEmpty().ifBlank { "Данил" },
+            displayName = resolvedName,
             username = prefs.getString(KEY_USERNAME, "@garderob").orEmpty().ifBlank { "@garderob" },
             bio = prefs.getString(KEY_BIO, "Архив и редкий стритвир").orEmpty(),
             avatarFilePath = savedAvatar,
@@ -48,6 +57,15 @@ class UserProfileRepository(context: Context) {
             ),
             useGradientBackground = prefs.getBoolean(KEY_USE_GRADIENT_BG, true),
         )
+    }
+
+    private fun loadInitialFeedColumns(): Int =
+        prefs.getInt(KEY_FEED_COLUMNS, DEFAULT_FEED_COLUMNS).coerceIn(MIN_FEED_COLUMNS, MAX_FEED_COLUMNS)
+
+    fun setFeedColumns(columns: Int) {
+        val coerced = columns.coerceIn(MIN_FEED_COLUMNS, MAX_FEED_COLUMNS)
+        _feedColumns.value = coerced
+        prefs.edit().putInt(KEY_FEED_COLUMNS, coerced).apply()
     }
 
     fun updateProfile(
@@ -148,5 +166,31 @@ class UserProfileRepository(context: Context) {
         private const val KEY_GRADIENT_START = "gradient_start_argb"
         private const val KEY_GRADIENT_END = "gradient_end_argb"
         private const val KEY_USE_GRADIENT_BG = "use_gradient_bg"
+        private const val KEY_FEED_COLUMNS = "feed_columns"
+
+        const val DEFAULT_FEED_COLUMNS = 1
+        const val MIN_FEED_COLUMNS = 1
+        const val MAX_FEED_COLUMNS = 3
+
+        private val DEFAULT_RANDOM_NAMES = listOf(
+            "Архивариус",
+            "Неон Лис",
+            "Стрит Вайб",
+            "Лук Номад",
+            "Винтаж Дроп",
+            "Опиум Кот",
+            "Деним Волк",
+            "Трейл Рейдер",
+            "Ретро Сет",
+            "Хайп Гость",
+            "Кибер Бро",
+            "Фэшн Фантом",
+        )
+
+        fun randomDefaultDisplayName(random: Random = Random.Default): String {
+            val base = DEFAULT_RANDOM_NAMES[random.nextInt(DEFAULT_RANDOM_NAMES.size)]
+            val number = random.nextInt(10, 100)
+            return "$base #$number"
+        }
     }
 }

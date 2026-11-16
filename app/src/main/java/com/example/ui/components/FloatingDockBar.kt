@@ -14,9 +14,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Checkroom
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.ViewStream
+import androidx.compose.material.icons.outlined.Checkroom
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.material.icons.outlined.ViewStream
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -35,11 +39,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.R
 
 enum class AppDestination {
     FEED,
+    OUTFITS,
+    GOALS,
     PROFILE,
 }
 
@@ -47,6 +54,8 @@ enum class AppDestination {
 fun FloatingDockBar(
     currentDestination: AppDestination,
     likedCount: Int,
+    outfitsCount: Int,
+    goalsCount: Int,
     onSelectDestination: (AppDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -58,12 +67,12 @@ fun FloatingDockBar(
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = modifier
             .navigationBarsPadding()
-            .padding(horizontal = 24.dp, vertical = 14.dp)
+            .padding(horizontal = 10.dp, vertical = 14.dp)
             .testTag("floating_dock_bar"),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             DockButton(
@@ -77,6 +86,32 @@ fun FloatingDockBar(
                 badgeCount = 0,
                 onClick = { onSelectDestination(AppDestination.FEED) },
                 modifier = Modifier.testTag("dock_feed_button"),
+            )
+
+            DockButton(
+                label = stringResource(R.string.dock_outfits),
+                icon = if (currentDestination == AppDestination.OUTFITS) {
+                    Icons.Filled.Checkroom
+                } else {
+                    Icons.Outlined.Checkroom
+                },
+                selected = currentDestination == AppDestination.OUTFITS,
+                badgeCount = outfitsCount,
+                onClick = { onSelectDestination(AppDestination.OUTFITS) },
+                modifier = Modifier.testTag("dock_outfits_button"),
+            )
+
+            DockButton(
+                label = stringResource(R.string.dock_goals),
+                icon = if (currentDestination == AppDestination.GOALS) {
+                    Icons.Filled.Savings
+                } else {
+                    Icons.Outlined.Savings
+                },
+                selected = currentDestination == AppDestination.GOALS,
+                badgeCount = goalsCount,
+                onClick = { onSelectDestination(AppDestination.GOALS) },
+                modifier = Modifier.testTag("dock_goals_button"),
             )
 
             DockButton(
@@ -134,7 +169,7 @@ private fun DockButton(
             ),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
@@ -153,7 +188,7 @@ private fun DockButton(
                         imageVector = icon,
                         contentDescription = label,
                         tint = contentColor,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(18.dp),
                     )
                 }
             } else {
@@ -161,15 +196,17 @@ private fun DockButton(
                     imageVector = icon,
                     contentDescription = label,
                     tint = contentColor,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(18.dp),
                 )
             }
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(4.dp))
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.labelMedium,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                 color = contentColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }

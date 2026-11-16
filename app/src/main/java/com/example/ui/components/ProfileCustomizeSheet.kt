@@ -28,13 +28,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -44,6 +45,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -63,7 +65,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -71,7 +72,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.R
 import com.example.data.UserProfile
-import com.example.ui.theme.ProfileGradientPreset
 import com.example.ui.theme.ProfilePalette
 import java.io.File
 
@@ -176,7 +176,12 @@ fun ProfileCustomizeSheet(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(86.dp)
-                            .background(Brush.linearGradient(previewBannerColors)),
+                            .background(Brush.linearGradient(previewBannerColors))
+                            .clickable {
+                                coverPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                                )
+                            },
                     ) {
                         if (hasCoverFile) {
                             AsyncImage(
@@ -189,25 +194,91 @@ fun ProfileCustomizeSheet(
                                 modifier = Modifier.fillMaxSize(),
                             )
                         }
+
+                        IconButton(
+                            onClick = {
+                                coverPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                                )
+                            },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .minimumInteractiveComponentSize()
+                                .testTag("preview_cover_pencil_button"),
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = Color.Black.copy(alpha = 0.56f),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Edit,
+                                    contentDescription = stringResource(R.string.profile_edit_cover_cd),
+                                    tint = Color.White,
+                                    modifier = Modifier
+                                        .padding(6.dp)
+                                        .size(14.dp),
+                                )
+                            }
+                        }
                     }
 
+                    val previewAvatarRing = if (useGradientBg) {
+                        previewTopTint
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainer
+                    }
                     Box(
                         modifier = Modifier
                             .padding(start = 16.dp)
-                            .offset(y = (-28).dp),
+                            .offset(y = (-28).dp)
+                            .size(68.dp),
                     ) {
                         ProfileAvatarCircle(
                             avatarFilePath = profile.avatarFilePath,
                             avatarEmoji = selectedEmoji,
                             displayName = displayName,
-                            ringColor = if (useGradientBg) {
-                                previewTopTint
-                            } else {
-                                MaterialTheme.colorScheme.surfaceContainer
-                            },
+                            ringColor = previewAvatarRing,
                             accentColor = Color(gradientStartArgb),
                             size = 68.dp,
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .clickable {
+                                    avatarPickerLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                                    )
+                                },
                         )
+
+                        IconButton(
+                            onClick = {
+                                avatarPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                                )
+                            },
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .offset(x = 8.dp, y = 8.dp)
+                                .minimumInteractiveComponentSize()
+                                .testTag("preview_avatar_pencil_button"),
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .border(2.dp, previewAvatarRing, CircleShape),
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Edit,
+                                        contentDescription = stringResource(R.string.profile_edit_avatar_cd),
+                                        tint = MaterialTheme.colorScheme.onPrimary,
+                                        modifier = Modifier.size(12.dp),
+                                    )
+                                }
+                            }
+                        }
                     }
 
                     val previewTextColor = if (useGradientBg) {
@@ -394,83 +465,20 @@ fun ProfileCustomizeSheet(
                     .testTag("profile_edit_bio_input"),
             )
 
-            // Gradient Presets + Custom Two-Color Picker
+            // Slider-only Gradient Color Controls
             Text(
                 text = stringResource(R.string.profile_gradient_section),
                 style = MaterialTheme.typography.titleSmall,
             )
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                ProfileGradientPreset.entries.forEach { preset ->
-                    val isSelected = gradientStartArgb == preset.startArgb &&
-                        gradientEndArgb == preset.endArgb
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier
-                            .width(72.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .clickable {
-                                gradientStartArgb = preset.startArgb
-                                gradientEndArgb = preset.endArgb
-                            }
-                            .padding(4.dp)
-                            .testTag("gradient_preset_${preset.id.lowercase()}"),
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(50.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    Brush.linearGradient(
-                                        ProfilePalette.bannerColors(preset.startArgb, preset.endArgb),
-                                    ),
-                                )
-                                .then(
-                                    if (isSelected) {
-                                        Modifier.border(
-                                            width = 3.dp,
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            shape = CircleShape,
-                                        )
-                                    } else {
-                                        Modifier
-                                    },
-                                ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            if (isSelected) {
-                                Icon(
-                                    imageVector = Icons.Filled.Check,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(20.dp),
-                                )
-                            }
-                        }
-                        Text(
-                            text = preset.title,
-                            style = MaterialTheme.typography.labelSmall,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                }
-            }
-
-            ColorPickerRow(
+            ColorPickerSliders(
                 label = stringResource(R.string.profile_gradient_color1),
                 selectedArgb = gradientStartArgb,
                 onSelectArgb = { gradientStartArgb = it },
                 tagPrefix = "color1",
             )
 
-            ColorPickerRow(
+            ColorPickerSliders(
                 label = stringResource(R.string.profile_gradient_color2),
                 selectedArgb = gradientEndArgb,
                 onSelectArgb = { gradientEndArgb = it },
@@ -523,105 +531,128 @@ fun ProfileCustomizeSheet(
 }
 
 @Composable
-private fun ColorPickerRow(
+private fun ColorPickerSliders(
     label: String,
     selectedArgb: Long,
     onSelectArgb: (Long) -> Unit,
     tagPrefix: String,
 ) {
     val activeColor = Color(selectedArgb)
-    var sliderHue by remember(selectedArgb) {
+    val initialHsv = remember {
         val hsv = FloatArray(3)
-        android.graphics.Color.colorToHSV(activeColor.toArgb(), hsv)
-        mutableFloatStateOf(hsv[0])
+        android.graphics.Color.colorToHSV(Color(selectedArgb).toArgb(), hsv)
+        hsv
+    }
+    var sliderHue by remember { mutableFloatStateOf(initialHsv[0]) }
+    var sliderSaturation by remember { mutableFloatStateOf(initialHsv[1]) }
+    var sliderBrightness by remember { mutableFloatStateOf(initialHsv[2].coerceAtLeast(0.10f)) }
+
+    fun emitColor(h: Float, s: Float, v: Float) {
+        val customColor = Color.hsv(
+            hue = h.coerceIn(0f, 360f),
+            saturation = s.coerceIn(0f, 1f),
+            value = v.coerceIn(0.10f, 1f),
+        )
+        onSelectArgb(customColor.toArgb().toLong() and 0xFFFFFFFFL)
     }
 
-    Column(
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(18.dp)
-                    .clip(CircleShape)
-                    .background(activeColor)
-                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold,
-            )
-        }
-
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            ProfilePalette.swatchColors.forEachIndexed { idx, argb ->
-                val isSelected = selectedArgb == argb
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 Box(
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(20.dp)
                         .clip(CircleShape)
-                        .clickable { onSelectArgb(argb) }
-                        .padding(5.dp)
-                        .clip(CircleShape)
-                        .background(Color(argb))
-                        .then(
-                            if (isSelected) {
-                                Modifier.border(
-                                    width = 2.5.dp,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    shape = CircleShape,
-                                )
-                            } else {
-                                Modifier.border(
-                                    width = 1.dp,
-                                    color = MaterialTheme.colorScheme.outlineVariant,
-                                    shape = CircleShape,
-                                )
-                            },
-                        )
-                        .testTag("${tagPrefix}_swatch_$idx"),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    if (isSelected) {
-                        Icon(
-                            imageVector = Icons.Filled.Check,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp),
-                        )
-                    }
-                }
+                        .background(activeColor)
+                        .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
+                )
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
-        }
 
-        // Spectrum hue slider for arbitrary custom color selection
-        Slider(
-            value = sliderHue,
-            onValueChange = { hue ->
-                sliderHue = hue
-                val customColor = Color.hsv(hue.coerceIn(0f, 360f), 0.80f, 0.90f)
-                onSelectArgb(customColor.toArgb().toLong() and 0xFFFFFFFFL)
-            },
-            valueRange = 0f..360f,
-            colors = SliderDefaults.colors(
-                thumbColor = activeColor,
-                activeTrackColor = activeColor,
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("${tagPrefix}_hue_slider"),
-        )
+            // Hue slider
+            Text(
+                text = stringResource(R.string.profile_slider_hue),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Slider(
+                value = sliderHue,
+                onValueChange = { hue ->
+                    sliderHue = hue
+                    emitColor(hue, sliderSaturation, sliderBrightness)
+                },
+                valueRange = 0f..360f,
+                colors = SliderDefaults.colors(
+                    thumbColor = activeColor,
+                    activeTrackColor = activeColor,
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("${tagPrefix}_hue_slider"),
+            )
+
+            // Saturation slider
+            Text(
+                text = stringResource(R.string.profile_slider_saturation),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Slider(
+                value = sliderSaturation,
+                onValueChange = { sat ->
+                    sliderSaturation = sat
+                    emitColor(sliderHue, sat, sliderBrightness)
+                },
+                valueRange = 0f..1f,
+                colors = SliderDefaults.colors(
+                    thumbColor = activeColor,
+                    activeTrackColor = activeColor,
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("${tagPrefix}_saturation_slider"),
+            )
+
+            // Brightness slider
+            Text(
+                text = stringResource(R.string.profile_slider_brightness),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Slider(
+                value = sliderBrightness,
+                onValueChange = { brightness ->
+                    sliderBrightness = brightness
+                    emitColor(sliderHue, sliderSaturation, brightness)
+                },
+                valueRange = 0.10f..1f,
+                colors = SliderDefaults.colors(
+                    thumbColor = activeColor,
+                    activeTrackColor = activeColor,
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("${tagPrefix}_brightness_slider"),
+            )
+        }
     }
 }
 

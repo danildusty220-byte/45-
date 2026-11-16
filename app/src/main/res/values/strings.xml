@@ -3,22 +3,128 @@
 
     <!-- Floating Bottom Dock -->
     <string name="dock_feed">Лента</string>
+    <string name="dock_outfits">Аутфиты</string>
+    <string name="dock_goals">Цели</string>
     <string name="dock_profile">Профиль</string>
+
+    <!-- Savings Goals Tab -->
+    <string name="goals_header">ЦЕЛИ</string>
+    <string name="goals_create_btn">Новая цель</string>
+    <string name="goals_empty_title">Поставьте первую финансовую цель</string>
+    <string name="goals_empty_subtitle">Выберите любую вещь из ленты или целый созданный аутфит, укажите нужную сумму и пополняйте копилку по мере накопления</string>
+    <string name="goals_empty_cta_item">Выбрать вещь</string>
+    <string name="goals_empty_cta_outfit">Выбрать аутфит</string>
+    <string name="goals_summary_saved">Всего отложено</string>
+    <string name="goals_summary_of">из %1$s</string>
+    <string name="goals_summary_active">%1$d в процессе</string>
+    <string name="goals_summary_done">%1$d накоплено</string>
+    <string name="goals_filter_all">Все</string>
+    <string name="goals_filter_active">Коплю</string>
+    <string name="goals_filter_completed">Накоплено</string>
+    <string name="goals_filter_empty">В этом разделе пока нет целей</string>
+    <string name="goals_badge_item">ВЕЩЬ</string>
+    <string name="goals_badge_outfit">АУТФИТ · %1$d вещ.</string>
+    <string name="goals_completed_pill">Накоплено</string>
+    <string name="goals_remaining_amount">Осталось %1$s</string>
+    <string name="goals_ready_to_buy">Цель достигнута — можно брать!</string>
+    <string name="goals_deposit_btn">Пополнить</string>
+    <string name="goals_edit_cd">Изменить сумму цели</string>
+    <string name="goals_delete_cd">Удалить цель</string>
+    <string name="goal_create_title">Новая цель</string>
+    <string name="goal_mode_item">Вещь из ленты</string>
+    <string name="goal_mode_outfit">Целый аутфит</string>
+    <string name="goal_search_item_hint">Поиск вещи: бренд, модель…</string>
+    <string name="goal_target_price_label">Сколько нужно накопить (₽)</string>
+    <string name="goal_target_price_placeholder">Например: 45000</string>
+    <string name="goal_create_submit">Создать цель</string>
+    <string name="goal_no_outfits_title">Нет созданных аутфитов</string>
+    <string name="goal_no_outfits_subtitle">Сначала соберите хотя бы один образ во вкладке «Аутфиты», тогда на него можно будет копить целиком</string>
+    <string name="goal_go_to_outfits">Перейти к аутфитам</string>
+    <string name="goal_deposit_title">Добавить в цель</string>
+    <string name="goal_deposit_custom_label">Сумма пополнения (₽)</string>
+    <string name="goal_deposit_custom_placeholder">Например: 3500</string>
+    <string name="goal_deposit_fill_remaining">Закрыть остаток (%1$s)</string>
+    <string name="goal_deposit_submit">Добавить деньги</string>
+    <string name="goal_edit_title">Изменить цель</string>
+    <string name="goal_edit_saved_label">Уже накоплено (₽)</string>
+    <string name="goal_save_changes">Сохранить изменения</string>
+    <string name="detail_set_goal">В цели</string>
+    <string name="outfit_set_goal">Копить на аутфит</string>
+
+    <!-- Outfits & Compatibility -->
+    <string name="outfits_header">АУТФИТЫ</string>
+    <string name="outfits_create_btn">Создать</string>
+    <string name="outfits_empty_title">Соберите свой первый аутфит</string>
+    <string name="outfits_empty_subtitle">Комбинируйте вещи из каталога, проверяйте показатель сочетания и закрепите один фаворитный образ в профиле</string>
+    <string name="outfits_empty_cta">Собрать аутфит</string>
+    <string name="outfit_builder_create_title">Новый аутфит</string>
+    <string name="outfit_builder_edit_title">Редактировать аутфит</string>
+    <string name="outfit_name_label">Название аутфита</string>
+    <string name="outfit_name_placeholder">Например: Ночной архив</string>
+    <string name="outfit_pick_items_hint">Выберите вещи (%1$d выбрано) · слои: футболка → худи → куртка</string>
+    <string name="outfit_requirements_title">Обязательно для аутфита:</string>
+    <string name="outfit_req_sneakers">Кроссовки</string>
+    <string name="outfit_req_bottom">Шорты / Джинсы</string>
+    <string name="outfit_req_top">Кофта / Футболка</string>
+    <string name="outfit_requirements_missing_hint">Добавьте кроссовки, шорты или джинсы и кофту или футболку</string>
+    <string name="outfit_slot_locked_badge">Занято</string>
+    <string name="outfit_slot_conflict_bottom">Сначала снимите выбранный низ (%1$s): нельзя надеть джинсы и шорты вместе</string>
+    <string name="outfit_slot_conflict_headwear">На голове уже надето «%1$s» — нельзя надеть два головных убора</string>
+    <string name="outfit_slot_conflict_generic">Нельзя надеть две вещи одного типа: уже выбрано «%1$s»</string>
+    <string name="outfit_filter_all">Все</string>
+    <string name="outfit_filter_liked">Избранное</string>
+    <string name="outfit_save_btn">Сохранить аутфит</string>
+    <string name="outfit_items_count">%1$d вещ.</string>
+    <string name="outfit_set_favorite">В профиль</string>
+    <string name="outfit_is_favorite">В профиле</string>
+    <string name="outfit_edit_cd">Редактировать аутфит</string>
+    <string name="outfit_delete_cd">Удалить аутфит</string>
+    <string name="compatibility_title">Показатель сочетания</string>
+    <string name="compatibility_color">Цвет</string>
+    <string name="compatibility_silhouette">Силуэт</string>
+    <string name="compatibility_season">Сезон</string>
+    <string name="compatibility_verdict_ideal">Идеальный мэтч</string>
+    <string name="compatibility_verdict_good">Хорошее сочетание</string>
+    <string name="compatibility_verdict_bold">Смелый микс</string>
+    <string name="compatibility_verdict_clash">Спорное сочетание</string>
+    <string name="compatibility_verdict_pending">Добавьте ещё вещь</string>
+    <string name="profile_favorite_outfit_title">Фаворитный аутфит</string>
+    <string name="profile_favorite_outfit_badge">ФАВОРИТ</string>
+    <string name="profile_favorite_outfit_empty">Добавьте один фаворитный аутфит во вкладке «Аутфиты», чтобы закрепить его здесь</string>
+    <string name="profile_favorite_outfit_pick">Выбрать аутфит</string>
+    <string name="profile_favorite_outfit_change">Сменить</string>
+    <string name="profile_favorite_outfit_remove">Убрать</string>
+    <string name="outfit_view_silhouette">На манекене</string>
+    <string name="outfit_view_strip">Вещи</string>
+    <string name="outfit_builder_tab_pick">Подбор</string>
+    <string name="outfit_builder_tab_silhouette">Манекен (%1$d)</string>
+    <string name="outfit_silhouette_empty">Нажимайте на вещи — они сразу появятся на манекене</string>
+    <string name="slot_headwear">Голова</string>
+    <string name="slot_outerwear">Куртка</string>
+    <string name="slot_top">Верх</string>
+    <string name="slot_belt">Ремень</string>
+    <string name="slot_bottom">Низ</string>
+    <string name="slot_backpack">Рюкзак</string>
+    <string name="slot_footwear">Обувь</string>
 
     <!-- Sketch-Inspired Filters Header -->
     <string name="filters_header">ФИЛЬТРЫ</string>
     <string name="search_keyword_hint">Поиск: Off-White, Raf Simons, MCM, Armani…</string>
     <string name="search_clear_cd">Очистить поиск</string>
 
-    <!-- Row 1: 3 Filter Tiles -->
+    <!-- Row 1: 2 Filter Tiles -->
     <string name="filter_tile_brand_title">Бренд</string>
     <string name="filter_tile_category_title">Категория</string>
-    <string name="filter_tile_weather_title">Погода</string>
     <string name="filter_all_brands">Все бренды</string>
     <string name="filter_all_categories">Вся одежда</string>
-    <string name="filter_all_weather">Любая</string>
 
-    <!-- Weather Labels -->
+    <!-- Feed Layout Customization -->
+    <string name="feed_layout_cd">Настроить количество вещей в строке</string>
+    <string name="feed_layout_title">Вид ленты</string>
+    <string name="feed_columns_option">%1$d в ряд</string>
+    <string name="feed_shuffle_cd">Перемешать вещи в ленте</string>
+
+    <!-- Weather Labels (Item Detail) -->
     <string name="chip_weather_hot">Жара / Солнце</string>
     <string name="chip_weather_mild">Прохладно</string>
     <string name="chip_weather_cold">Холод / Дождь</string>
@@ -34,7 +140,7 @@
 
     <!-- Feed Empty State -->
     <string name="feed_empty_title">Ничего не найдено</string>
-    <string name="feed_empty_subtitle">Попробуйте изменить фильтры, выбрать другую погоду или поискать на Авито</string>
+    <string name="feed_empty_subtitle">Попробуйте изменить фильтры или поискать на Авито</string>
     <string name="feed_reset_filters">Сбросить фильтры</string>
 
     <!-- Detail Sheet -->
@@ -52,6 +158,8 @@
     <string name="profile_reset_avatar">Убрать фото аватара</string>
     <string name="profile_change_cover">Своя обложка</string>
     <string name="profile_reset_cover">Убрать обложку</string>
+    <string name="profile_edit_cover_cd">Изменить обложку</string>
+    <string name="profile_edit_avatar_cd">Изменить аватар</string>
     <string name="profile_cover_cd">Обложка профиля</string>
     <string name="profile_name_label">Имя профиля</string>
     <string name="profile_username_label">Тег (@ник)</string>
@@ -59,6 +167,9 @@
     <string name="profile_gradient_section">Цвета градиента</string>
     <string name="profile_gradient_color1">Цвет 1 (начало)</string>
     <string name="profile_gradient_color2">Цвет 2 (конец)</string>
+    <string name="profile_slider_hue">Оттенок</string>
+    <string name="profile_slider_saturation">Насыщенность</string>
+    <string name="profile_slider_brightness">Яркость</string>
     <string name="profile_gradient_bg_toggle">Градиентный фон профиля</string>
     <string name="profile_save_btn">Сохранить</string>
     <string name="profile_stat_likes">В избранном</string>
@@ -73,8 +184,10 @@
     <!-- Garment Categories -->
     <string name="type_cap">Кепки</string>
     <string name="type_hoodie">Худи</string>
+    <string name="type_jacket">Куртки</string>
     <string name="type_beanie">Шапки</string>
     <string name="type_jeans">Джинсы</string>
+    <string name="type_shorts">Шорты</string>
     <string name="type_tshirt">Футболки</string>
     <string name="type_sneakers">Кроссовки</string>
     <string name="type_backpack">Рюкзаки</string>
